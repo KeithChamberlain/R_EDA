@@ -111,6 +111,6 @@ outlier.transform <- function(y, transform, threshold, index=NULL){
     Find outliers by applying a threshold after transformation
     '
     xform <- transform(y[index])
-    coalesce(xform > -threshold & xform < threshold, is.na(y))
+    xform < -threshold & xform > threshold
 }
 
