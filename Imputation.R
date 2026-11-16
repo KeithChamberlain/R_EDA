@@ -89,3 +89,26 @@ impute.fun.formula.index <- function(fun, formula, data, dv, index_col, ...){
         model, newdata=data[data[, index_col], ])
     data
 }
+
+
+impute.lin <- function(y, index){
+    '
+    Imputes numeric missingness by the previous and next non-missing values.
+    '
+    cls <- class(y) # Used to reset the class if mean changes it.
+    # If the first value is set, grab the closest next one
+    if(index[1]) y[1] <- y[!is.na(y)][1]
+    # If the last value is set, grab the closest one before it
+    if(index[length(index)]) y[length(index)] <- y[!is.na(y)][length(!is.na(y))]
+    # For the rest find the next valid first and last value and take their mean
+    for(i in 2:(length(y)-1)){
+        if(index[i]){
+            j <- k <- 1
+            while(index[i-j] & (i-j) > 0) j <- j - 1
+            while(index[i+k] & (i+k) < length(index)) k <- k + 1
+            y[i] <- mean(c(y[i-j], y[i+k]))
+        }
+    }
+    class(y) <- cls
+    y
+}
