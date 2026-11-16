@@ -104,3 +104,13 @@ outlier.test.formula <- function(data, formula, threshold=1/nrow(data),
     result <- pnorm(resid, mean=mean(resid), sd=sd(resid), ...)
     result < threshold | result > 1-threshold
 }
+
+
+outlier.transform <- function(y, transform, threshold, index=NULL){
+    '
+    Find outliers by applying a threshold after transformation
+    '
+    xform <- transform(y[index])
+    coalesce(xform > -threshold & xform < threshold, is.na(y))
+}
+
