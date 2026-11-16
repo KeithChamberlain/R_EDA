@@ -73,3 +73,77 @@ method_of_moments_log <- function(mean, sd){
     mu=log(mean) - sigma^2/2
     c("sigma"=sigma, "mu"=mu)
 }
+
+
+non_saturated <- function(fun=tanh, inv=atanh, unique=2^8, ...){
+    y <- fun(seq(-12, 12, 12/unique), ...)
+    index <- y > min(y)+2/unique & y < max(y)-2/unique
+    inv_y <- inv(y[index], ...)
+    c("min"=min(inv_y, ...), "max"=max(inv_y, ...))
+}
+
+
+transform.z <- function(y, ...){
+    '
+    tranform to z-score for y
+    '
+    (if(na.rm) y[!is.na(y)] else y - mean(y, ...))/sd(y, ...)
+}
+
+
+transform.z.restore <- function(y, mu, sigma, ...){
+    if(na.rm) y[!is.na(y)] else y * sigma+mu
+}
+
+
+transform.minmax <- function(y, ...){
+    '
+    transform to range of [0, 1]
+    '
+    ((if(na.rm) y[!is.na(y)] else y)-min(y, ...))/(max(y, ...)-min(y, ...))
+}
+
+
+transform.minmax.restore <- function(y, new_min, new_max, ...){
+    '
+    restore to range of y
+    '
+    ((if(na.rm) y[!is.na(y)] else y) * (new_max-new_min))+new_min
+}
+
+
+transform.activation <- function(y, fun=tanh, inv=atanh, unique=2^8, ...){
+    '
+    transform to range of [new_min, new_max] based on activation limits and
+    unique bit depth
+    '
+    lims <- non_saturated(fun=fun, inv=inv, unique=unique, ...)
+    fun(transform.minmax.restore(transform.minmax(y, ...),
+                      new_min=lims["min"], new_max=lims["max"], ...))
+}
+
+
+transform.activation.restore <- function(y, fun=atanh, new_min, new_max, ...){
+    '
+    transform to range of [new_min, new_max] based on fun and new limits.
+    used as inverse transform to transform.activation
+    '
+    transform.minmax.restore(transform.minmax(fun(y), ...),
+                             new_min=new_min, new_max=new_max, ...)
+}
+
+
+transform.logit <- function(y, base=exp(1)){
+    '
+    transform from probability to infinite range
+    '
+    log(y/(1-y), base=base)
+}
+
+
+transform.sigmoid <- function(y, base=exp(1)){
+    '
+    transform from infinite range to probabilities
+    '
+    1/(1+base^(-y))
+}
