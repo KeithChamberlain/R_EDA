@@ -18,7 +18,7 @@ impute.distribution <- function(y, distribution=rnorm, ...){
     uses distribution to impute missing values.
     '
     distribution_of_data <- distribution(n=length(y), ...)
-    coalesce(y, distribution_of_data)
+    ifelse(is.na(y), distribution_of_data, y)
 }
 
 
@@ -26,7 +26,8 @@ impute.walk <- function(y, distribution, ...){
     '
     uses rolling sum of a distribution for a random walk
     '
-    coalesce(y, cumsum(c(y[!is.na(y)][1], distribution(n=length(y), ...)[-1])))
+    ifelse(is.na(y),
+           cumsum(c(y[!is.na(y)][1], distribution(n=length(y), ...)[-1])), y)
 }
 
 
