@@ -76,6 +76,9 @@ method_of_moments_log <- function(mean, sd){
 
 
 non_saturated <- function(fun=tanh, inv=atanh, unique=2^8, ...){
+    '
+    an estimate of the unsaturated range for the transform
+    '
     y <- fun(seq(-12, 12, 12/unique), ...)
     index <- y > min(y)+2/unique & y < max(y)-2/unique
     inv_y <- inv(y[index], ...)
@@ -87,12 +90,15 @@ transform.z <- function(y, ...){
     '
     tranform to z-score for y
     '
-    (if(na.rm) y[!is.na(y)] else y - mean(y, ...))/sd(y, ...)
+    (y-mean(y, ...))/sd(y, ...)
 }
 
 
 transform.z.restore <- function(y, mu, sigma, ...){
-    if(na.rm) y[!is.na(y)] else y * sigma+mu
+    '
+    inverse transform the z-transform
+    '
+    y*sigma+mu
 }
 
 
@@ -100,7 +106,7 @@ transform.minmax <- function(y, ...){
     '
     transform to range of [0, 1]
     '
-    ((if(na.rm) y[!is.na(y)] else y)-min(y, ...))/(max(y, ...)-min(y, ...))
+    (y-min(y, ...))/(max(y, ...)-min(y, ...))
 }
 
 
@@ -108,7 +114,7 @@ transform.minmax.restore <- function(y, new_min, new_max, ...){
     '
     restore to range of y
     '
-    ((if(na.rm) y[!is.na(y)] else y) * (new_max-new_min))+new_min
+    y * (new_max-new_min)+new_min
 }
 
 
