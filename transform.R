@@ -153,3 +153,69 @@ transform.sigmoid <- function(y, base=exp(1)){
     '
     1/(1+base^(-y))
 }
+
+
+transform.modifiedz <- function(y, na.rm=FALSE, constant=0.6744671045){
+    '
+    transform y to the modified z-score.
+    '
+    ((y-median(y, na.rm=na.rm))/
+         median(abs(y-median(y, na.rm=na.rm))) / constant)
+}
+
+
+transform.2modifiedz <- function(y, na.rm=FALSE, constant=0.6744671045){
+    '
+    transform y to an adapting double modified-z score
+    '
+    deviation <- y-median(y, na.rm=na.rm)
+    qs <- quantile(deviation, prob=c(0.25, 0.5, 0.75), na.rm=na.rm)
+    names(qs) <- c("1/4", "1/2", "3/4")
+    deviation / c(
+        median(abs(deviation[deviation < qs["1/2"]])) / constant,
+        median(abs(deviation[deviation >= qs["1/2"]])) / constant
+    )
+}
+
+
+utility.modes <- function(values, sign=1, logic=TRUE){
+    '
+    Indices of local maxima (sign = 1) or minima (sign = -1), edges included.
+    For use with `density(data)$y`, for example.
+    '
+    modes <- logical(length=length(values))
+    values <- sign*values
+    for(i in 2:(length(modes)-1)){
+        # Usual case
+        if(values[i] > values[i-1] & values[i] > values[i+1]) modes[i] <- TRUE
+        # First value larger than next
+        if(values[i-1] > values[i] & (i-1) == 1) modes[i] <- TRUE
+        # Last value larger than previous
+        if(values[i+1] > values[i] & (i+1)==length(modes)) modes[i] <- TRUE
+    }
+    if(logic) modes else which(modes)
+}
+
+
+transform.nmodifiedz <- function(data, ..., constant=0.6744671045, na.rm=FALSE){
+    '
+    Calculate the modified z-score for each mode, if there are fewer maxima
+    than minima.
+    '
+    ## Density
+    density_values <- density(data, ..., na.rm=na.rm)
+    ## Indexes of Maxima and Minima
+    maxima_indexes <- utility.modes(density_values$y, sign=1, logic=FALSE)
+    minima_indexes <- utility.modes(density_values$y, sign=-1, logic=FALSE)
+    nmode_z <- rep(NA, length=length(density_values$y))
+    sections <- findInterval(data, density_values$x[minima_indexes])
+    for(i in 1:length(maxima_indexes)){
+        center <- density_values$x[maxima_indexes[i]]
+        deviation <- data[sections==i] - center
+        nmode_z[sections==i] <- deviation * constant / c(
+            median(abs(deviation[deviation < 0])),
+            median(abs(deviation[deviation >=0]))
+        )
+    }
+    nmode_z
+}
