@@ -106,11 +106,11 @@ outlier.test.formula <- function(data, formula, threshold=1/nrow(data),
 }
 
 
-outlier.transform <- function(y, transform, threshold, index=NULL){
+outlier.transform <- function(y, transform=I, threshold=3.5, ...){
     '
     Find outliers by applying a threshold after transformation
     '
-    xform <- transform(y[index])
-    xform < -threshold & xform > threshold
+    xform <- transform(y, ...)
+    xform < -threshold | xform > threshold
 }
 
