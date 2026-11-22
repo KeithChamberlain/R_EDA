@@ -4,64 +4,68 @@
 ##
 
 
-#' @title Data Transformations
+#' @title Custom Data Transformation using `score()`
 #'
 #' @description
-#' Functions to perform data transformations.
+#' Function to perform custom data transformations.
 #'
 #' @usage
-#' `score(y, fun=mean, spread_agg=sum, power=2, var_power=1/2, ladder=I, ...)`
+#' `score(y, center=mean, spread=sum, power=2, var_power=1/2, ladder=I, ...)`
 #'
 #' @param y numeric vector to transform.
-#' @param fun central tendency function.
-#' @param spread_agg function used with spread determination.
+#' @param center central tendency function (score()) or transform function.
+#' @param spread function used with spread determination.
 #' @param power power to apply to deviation definition.
 #' @param var_power power to apply to the spread definition.
 #' @param ladder initial data transformation to apply.
-#' @param ... Other options to control the function fun.
+#' @param ... other options to control center, spread and ladder.
 #'
-#' @value A vector of the transformed values
+#' @returns A vector of the transformed values
 #'
-#' @references
-#' Johnson, Kotz & Balakrishnan, Continuous Univariate Distributions,
-#'    Vol. 1, Ch. 14 (Wiley, 1994).
+#' @details
+#' y is optionally transformed using ladder (e.g. `I`, `log`, `exp`), deviated
+#' by fun (e.g. `mean`, `median`) which is divided by spread
+#' (e.g. `sum`, `var`, `sd`) raised to any power. The denominator is then
+#' raised to any var_power. A couple notable standard transformations:
 #'
-#' @seealso [base::scale()] for scaling and centering matrices.
+#' - z-score: fun=mean, spread=sd, power=1, var_power=1, ladder=I
+#' reduces to (y-mean(y))/sd(y).
+#' - modified z-score: fun=median, spread_agg=sum, power=1,
+#' var_power=1, ladder=I reduces to (y-median(y))/mad(y)
+#'
+#' @seealso [transform.z()] for the z-score. [transform.z.inverse()] for an
+#' inverse to the z-score. [transform.modifiedz()] for the modified z-score.
+#' [base::scale()] for scaling and centering matrices. [stats::mad()] for
+#' the median absolute deviation. [base::mean()] for calculating the arithmetic
+#' mean. [base::median()] for calculating the median. [base::sum()] for the sum.
+#' [stats::var()] for the variance. [stats::sd()] for the standard deviation.
+#' [base::I()] to inhibit conversion. [base::log()] for the log of base
+#' `base`. [base::exp()] for e^x.
 #'
 #' @examples:
-#'
-#' ## Generate Normal and Zero Bounded Data
-#' data <- rnorm(10000, mean=3, sd=5)
+#' ## Generate zero bounded data and row axis
 #' log_scale <- method_of_moments_log(mean=8, sd=4)
-#' data2 <- exp(rnorm(10000, mean=log_scale['mu'], sd=log_scale['sigma']))
-#' x <- 1:length(data)
-#'
+#' data <- exp(rnorm(10000, mean=log_scale['mu'], sd=log_scale['sigma']))
+#' x <- 1:10000
 #' ## z-transform of Data
-#' z <- score(y=data, fun=mean, spread_agg=sum, power=2, var_power=1/2,
+#' z <- score(y=data, center=mean, spread=sd, power=1, var_power=1,
 #'            ladder=I, ...)
-#'
-#' ## Scale using Median Deviation and Variance.
-#' m <- score(y=data, fun=median, spread_agg=sum, power=1, var_power=1)
-#'
-#' ##
+#' ## Scale using modified z-score.
+#' m <- score(y=data, center=median, spread=mad, power=1, var_power=1)
 #' ## Visualize
 #' plot(z~x, type="p")
 #' plot(m~x, type="p")
-#' hist(data2)
+#' hist(data)
 #'
 #' @export
-
-
-score <- function(y, fun=mean, spread_agg=sum, power=2,
-                  var_power=1/2, ladder=I, ...){
+score <- function(y, center=mean, spread=var, power=1,
+                  var_power=1, ladder=I, ...){
     '
     calculate a transform of y.
-    - z-score: fun=mean, spread_agg=sum, power=2, and var_power is 1/2
-    - a median-score: fun=median, spread_agg=sum, power=1, var_power=1
     '
     y<-ladder(y)
-    (y-fun(y, ...))/(
-        spread_agg(abs(y-fun(y, ...))^power)/(length(y)-1))^var_power
+    (y-center(y, ...))/(
+        spread(abs(y-fun(y, ...))^power)^var_power)
 }
 
 
@@ -161,7 +165,7 @@ transform.sigmoid <- function(y, base=exp(1)){
 #' Function to calculate the modified z-score.
 #'
 #' @usage
-#' `transform.modifiedz(y, na.rm=FALSE, constant=0.6744671045)
+#' `transform.modifiedz(y, na.rm=FALSE, constant=0.6744671045)`
 #'
 #' @param y numeric vector to transform.
 #' @param na.rm to remove NAs in calcuation but not in result.
@@ -213,7 +217,7 @@ transform.modifiedz <- function(y, na.rm=FALSE, constant=0.6744671045){
 #' Function to calculate the double modified z-score.
 #'
 #' @usage
-#' `transform.2modifiedz(y, na.rm=FALSE, constant=0.6744671045)
+#' `transform.2modifiedz(y, na.rm=FALSE, constant=0.6744671045)`
 #'
 #' @param y numeric vector to transform.
 #' @param na.rm to remove NAs in calculation but not in result.
@@ -269,6 +273,9 @@ transform.2modifiedz <- function(y, na.rm=FALSE, constant=0.6744671045){
 #' @description
 #' Function to calculate the modes of data.
 #'
+#' @usage
+#' `utility.modes(values=values, sign=1, logic=FALSE)`
+#'
 #' @param values the values to find the peaks or valleys in.
 #' @param sign whether to invert the search and find the valleys.
 #' @param logic logical; whether to return the logical or numeric indices identifying the modes.
@@ -316,7 +323,7 @@ utility.modes <- function(values, sign=1, logic=TRUE){
 #' Function to calculate the modified z-score for n modes.
 #'
 #' @usage
-#' `transform.nmodifiedz(y, na.rm=FALSE, constant=0.6744671045)
+#' `transform.nmodifiedz(y, na.rm=FALSE, constant=0.6744671045)`
 #'
 #' @param y numeric vector to transform.
 #' @param na.rm to remove NAs in calculation but not in result.
