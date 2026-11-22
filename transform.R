@@ -290,6 +290,7 @@ transform.2modifiedz <- function(y, na.rm=FALSE, constant=0.6744671045){
 #' ## Find the distributions modes
 #' utility.modes(smoothed_distribution$y, logic=FALSE)
 #'
+#' @export
 utility.modes <- function(values, sign=1, logic=TRUE){
     '
     Indices of local maxima (sign = 1) or minima (sign = -1), edges included.
