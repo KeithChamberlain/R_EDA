@@ -155,6 +155,49 @@ transform.sigmoid <- function(y, base=exp(1)){
 }
 
 
+#' @title Modified Z-Score
+#'
+#' @description
+#' Function to calculate the modified z-score.
+#'
+#' @usage
+#' `transform.modifiedz(y, na.rm=FALSE, constant=0.6744671045)
+#'
+#' @param y numeric vector to transform.
+#' @param na.rm to remove NAs in calcuation but not in result.
+#' @param constant to scale to sigma units.
+#'
+#' @returns A vector of the transformed values
+#'
+#' @details
+#' Calculates and returns the modified z-score of the median deviated data
+#' normalized by the median absolute deviation, and optionally scales by a
+#' constant to resolve sigma units (e.g. +/-3sd).
+#'
+#' @references
+#' Rousseeuw, P. J., & Croux, C. (1993). Alternatives to the median absolute
+#'     deviation. Journal of the American Statistical Association, 88(424),
+#'     1273–1283.
+#' Hubert, M., & Vandervieren, E. (2008). An adjusted boxplot for skewed
+#'     distributions. Computational Statistics & Data Analysis, 52(12),
+#'     5186–5201.
+#'
+#' @seealso [transform.z()] for the z-score. [transform.z.inverse()] for an
+#' inverse to the z-score.
+#'
+#' @examples:
+#' ## Generate income data bounded at 22000, with a mean of 70390 and sd of
+#' ##    64000.
+#' data <- qnorm(
+#'     runif(n=10000, min=pnorm(q=22000, mean=70390, sd=64000), max=1),
+#'     mean=70390, sd=64000)
+#' hist(data, breaks=100, title="Histogram of Surrogate Income", xlab="Data")
+#' ## modified z-score of Data
+#' z <- transform.modifiedz(y=data)
+#' ## Visualize
+#' hist(z, breaks=100, title="Histogram of Modified-z Scores", xlab="Modified-z")
+#'
+#' @export
 transform.modifiedz <- function(y, na.rm=FALSE, constant=0.6744671045){
     '
     transform y to the modified z-score.
@@ -164,6 +207,49 @@ transform.modifiedz <- function(y, na.rm=FALSE, constant=0.6744671045){
 }
 
 
+#' @title Double Modified Z-Score Transform
+#'
+#' @description
+#' Function to calculate the double modified z-score.
+#'
+#' @usage
+#' `transform.2modifiedz(y, na.rm=FALSE, constant=0.6744671045)
+#'
+#' @param y numeric vector to transform.
+#' @param na.rm to remove NAs in calculation but not in result.
+#' @param constant to scale to sigma units or another value. Unscaled = 1.
+#'
+#' @returns A vector of the transformed values
+#'
+#' @details
+#' Calculates and returns the double modified z-score of the median deviated
+#' data normalized by the median absolute deviation of the lower and upper half,
+#' and optionally scales by a constant to resolve sigma units (e.g. +/-3sd).
+#'
+#' @references
+#' Rousseeuw, P. J., & Croux, C. (1993). Alternatives to the median absolute
+#'     deviation. Journal of the American Statistical Association, 88(424),
+#'     1273–1283.
+#' Hubert, M., & Vandervieren, E. (2008). An adjusted boxplot for skewed
+#'     distributions. Computational Statistics & Data Analysis, 52(12),
+#'     5186–5201.
+#'
+#' @seealso [transform.z()] for the z-score. [transform.z.inverse()] for an
+#' inverse to the z-score.
+#'
+#' @examples:
+#' ## Generate skewed 22000 bounded income data with mean of 70390 and sd of
+#' ##     64000.
+#' #' data <- qnorm(
+#'     runif(n=10000, min=pnorm(q=22000, mean=70390, sd=64000), max=1),
+#'     mean=70390, sd=64000)
+#' hist(data, breaks=100, title="Histogram of Surrogate Income", xlab="Data")
+#' ## modified z-score of Data
+#' z <- transform.2modifiedz(y=data)
+#' ## Visualize
+#' hist(z, breaks=100, title="Histogram of Modified-z Scores", xlab="Modified-z from Each Side")
+#'
+#' @export
 transform.2modifiedz <- function(y, na.rm=FALSE, constant=0.6744671045){
     '
     transform y to an adapting double modified-z score
@@ -176,6 +262,7 @@ transform.2modifiedz <- function(y, na.rm=FALSE, constant=0.6744671045){
         median(abs(deviation[deviation >= qs["1/2"]])) / constant
     )
 }
+
 
 
 utility.modes <- function(values, sign=1, logic=TRUE){
@@ -197,13 +284,53 @@ utility.modes <- function(values, sign=1, logic=TRUE){
 }
 
 
-transform.nmodifiedz <- function(data, ..., constant=0.6744671045, na.rm=FALSE){
+#' @title N-Modified Z-Score Transform
+#'
+#' @description
+#' Function to calculate the modified z-score for n modes.
+#'
+#' @usage
+#' `transform.nmodifiedz(y, na.rm=FALSE, constant=0.6744671045)
+#'
+#' @param y numeric vector to transform.
+#' @param na.rm to remove NAs in calculation but not in result.
+#' @param constant to scale to sigma units or another value. Unscaled = 1.
+#'
+#' @returns A vector of the transformed values
+#'
+#' @details
+#' Calculates and returns the n-modified z-score of the median deviated
+#' data normalized by the median absolute deviation of the lower and upper half,
+#' of each mode, and optionally scales by a constant to resolve sigma units.
+#'
+#' @seealso [transform.z()] for the z-score. [transform.z.inverse()] for an
+#' inverse to the z-score. [transform.modifiedz()] for the modified z score,
+#' [transform.2modifiedz()] for the modified z score from each side.
+#'
+#' @examples:
+#' ## Generate skewed 22000 bounded income data with mean of 70390 and sd of
+#' ##     64000.
+#' data1 <- qnorm(
+#'    runif(n=10000, min=pnorm(q=22000, mean=70390, sd=64000), max=1),
+#'    mean=70390, sd=64000)
+#' data2 <- qnorm(
+#'     runif(n=10000, min=0, max=pnorm(q=400000, mean=300000, sd=80000)),
+#'     mean=400000, sd=80000)
+#' data <- c(data1, data2)
+#' hist(data, breaks=100, title="Histogram of Surrogate Income", xlab="Data")
+#' ## modified z-score of Data
+#' z <- transform.nmodifiedz(y=data)
+#' ## Visualize
+#' hist(z, breaks=100, title="Histogram of Modified-z Scores", xlab="Modified-z from Each Side of Each Mode")
+#'
+#' @export
+transform.nmodifiedz <- function(y, ..., constant=0.6744671045, na.rm=FALSE){
     '
     Calculate the modified z-score for each mode, if there are fewer maxima
     than minima.
     '
     ## Density
-    density_values <- density(data, ..., na.rm=na.rm)
+    density_values <- density(y, ..., na.rm=na.rm)
     ## Indexes of Maxima and Minima
     maxima_indexes <- utility.modes(density_values$y, sign=1, logic=FALSE)
     minima_indexes <- utility.modes(density_values$y, sign=-1, logic=FALSE)
@@ -219,3 +346,4 @@ transform.nmodifiedz <- function(data, ..., constant=0.6744671045, na.rm=FALSE){
     }
     nmode_z
 }
+
