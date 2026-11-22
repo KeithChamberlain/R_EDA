@@ -191,11 +191,11 @@ transform.sigmoid <- function(y, base=exp(1)){
 #' data <- qnorm(
 #'     runif(n=10000, min=pnorm(q=22000, mean=70390, sd=64000), max=1),
 #'     mean=70390, sd=64000)
-#' hist(data, breaks=100, title="Histogram of Surrogate Income", xlab="Data")
+#' hist(data, breaks=100, main="Histogram of Surrogate Income", xlab="Data")
 #' ## modified z-score of Data
 #' z <- transform.modifiedz(y=data)
 #' ## Visualize
-#' hist(z, breaks=100, title="Histogram of Modified-z Scores", xlab="Modified-z")
+#' hist(z, breaks=100, main="Histogram of Modified-z Scores", xlab="Modified-z")
 #'
 #' @export
 transform.modifiedz <- function(y, na.rm=FALSE, constant=0.6744671045){
@@ -243,11 +243,11 @@ transform.modifiedz <- function(y, na.rm=FALSE, constant=0.6744671045){
 #' #' data <- qnorm(
 #'     runif(n=10000, min=pnorm(q=22000, mean=70390, sd=64000), max=1),
 #'     mean=70390, sd=64000)
-#' hist(data, breaks=100, title="Histogram of Surrogate Income", xlab="Data")
+#' hist(data, breaks=100, main="Histogram of Surrogate Income", xlab="Data")
 #' ## modified z-score of Data
 #' z <- transform.2modifiedz(y=data)
 #' ## Visualize
-#' hist(z, breaks=100, title="Histogram of Modified-z Scores", xlab="Modified-z from Each Side")
+#' hist(z, breaks=100, main="Histogram of Modified-z Scores", xlab="Modified-z from Each Side")
 #'
 #' @export
 transform.2modifiedz <- function(y, na.rm=FALSE, constant=0.6744671045){
@@ -264,7 +264,32 @@ transform.2modifiedz <- function(y, na.rm=FALSE, constant=0.6744671045){
 }
 
 
-
+#' @title Finds the modes of data
+#'
+#' @description
+#' Function to calculate the modes of data.
+#'
+#' @param values the values to find the peaks or valleys in.
+#' @param sign whether to invert the search and find the valleys.
+#' @param logic logical; whether to return the logical or numeric indices identifying the modes.
+#'
+#' @returns an integer or logical vector of indices for the identified values.
+#'
+#' @details
+#' Calculates and returns a logical `logic=TRUE` or numeric `logic=FALSE` vector
+#' of indices of the peaks or valleys in data depending on `sign`. May be slow
+#' if there are many, so it is recommended to smooth first.
+#'
+#' @examples
+#' ## Generate synthetic income data with a lower bound.
+#' data <- qnorm(
+#'    runif(n=10000, min=pnorm(q=22000, mean=70390, sd=64000), max=1),
+#'    mean=70390, sd=64000)
+#' ## Grab the smoothed distribution
+#' smoothed_distribution <- density(data, adjust = 2)
+#' ## Find the distributions modes
+#' utility.modes(smoothed_distribution$y, logic=FALSE)
+#'
 utility.modes <- function(values, sign=1, logic=TRUE){
     '
     Indices of local maxima (sign = 1) or minima (sign = -1), edges included.
@@ -317,11 +342,11 @@ utility.modes <- function(values, sign=1, logic=TRUE){
 #'     runif(n=10000, min=0, max=pnorm(q=400000, mean=300000, sd=80000)),
 #'     mean=400000, sd=80000)
 #' data <- c(data1, data2)
-#' hist(data, breaks=100, title="Histogram of Surrogate Income", xlab="Data")
+#' hist(data, breaks=100, main="Histogram of Surrogate Income", xlab="Data")
 #' ## modified z-score of Data
 #' z <- transform.nmodifiedz(y=data)
 #' ## Visualize
-#' hist(z, breaks=100, title="Histogram of Modified-z Scores", xlab="Modified-z from Each Side of Each Mode")
+#' hist(z, breaks=100, main="Histogram of Modified-z Scores", xlab="Modified-z from Each Side of Each Mode")
 #'
 #' @export
 transform.nmodifiedz <- function(y, ..., constant=0.6744671045, na.rm=FALSE){
