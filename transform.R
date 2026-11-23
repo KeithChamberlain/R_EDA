@@ -143,6 +143,36 @@ transform.activation.restore <- function(y, fun=atanh, new_min, new_max, ...){
 }
 
 
+#' @title A logit transform where base can vary
+#'
+#' @description
+#' Calculates the logit transform of data ideally transformed to the domain
+#' of values that generate the full range of transformed values.
+#'
+#' @usage
+#' `transform.logit(y=data, base=exp)`
+#'
+#' @param y is the data to transform
+#' @param base is the base to use for the transformation
+#'
+#' @returns a vector of transformed values
+#'
+#' @details
+#' If data is sampled from a normal distribution, such as when using
+#' `rnorm(10000, mean=30, sd=10)`, transformed via `base` to the usable range
+#' of the transform, then the sigmoid transform with the associated base
+#' gives the inverse.
+#'
+#' @seealso [transform.sigmoid()] for the sigmoid transform. [non_saturated()] to
+#' find the non-saturated ranges for a transform. [transform.minmax()] to
+#' transform to the base range between [0, 1]. [transform.minmax.restore()] for
+#' the inverse transform, or to transform from the base range to another range.
+#'
+#' @examples
+#' ## Create data
+#' data <- rnorm(n=10000, mean=30, sd=10)
+#' all.equal(transform.minmax(data), transform.logit(transform.sigmoid(transform.minmax(data))))
+#' @export
 transform.logit <- function(y, base=exp(1)){
     '
     transform from probability to infinite range
