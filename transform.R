@@ -165,7 +165,7 @@ transform.sigmoid <- function(y, base=exp(1)){
 #' Function to calculate the modified z-score.
 #'
 #' @usage
-#' `transform.modifiedz(y, na.rm=FALSE, constant=0.6744671045)`
+#' `transform.modifiedz(y, na.rm=FALSE, constant=qnorm(0.75))`
 #'
 #' @param y numeric vector to transform.
 #' @param na.rm to remove NAs in calcuation but not in result.
@@ -202,7 +202,7 @@ transform.sigmoid <- function(y, base=exp(1)){
 #' hist(z, breaks=100, main="Histogram of Modified-z Scores", xlab="Modified-z")
 #'
 #' @export
-transform.modifiedz <- function(y, na.rm=FALSE, constant=0.6744671045){
+transform.modifiedz <- function(y, na.rm=FALSE, constant=qnorm(0.75)){
     '
     transform y to the modified z-score.
     '
@@ -217,7 +217,7 @@ transform.modifiedz <- function(y, na.rm=FALSE, constant=0.6744671045){
 #' Function to calculate the double modified z-score.
 #'
 #' @usage
-#' `transform.2modifiedz(y, na.rm=FALSE, constant=0.6744671045)`
+#' `transform.2modifiedz(y, na.rm=FALSE, constant=qnorm(0.75))`
 #'
 #' @param y numeric vector to transform.
 #' @param na.rm to remove NAs in calculation but not in result.
@@ -254,16 +254,17 @@ transform.modifiedz <- function(y, na.rm=FALSE, constant=0.6744671045){
 #' hist(z, breaks=100, main="Histogram of Modified-z Scores", xlab="Modified-z from Each Side")
 #'
 #' @export
-transform.2modifiedz <- function(y, na.rm=FALSE, constant=0.6744671045){
+transform.2modifiedz <- function(y, na.rm=FALSE, constant=qnorm(0.75)){
     '
     transform y to an adapting double modified-z score
     '
     deviation <- y-median(y, na.rm=na.rm)
     qs <- quantile(deviation, prob=c(0.25, 0.5, 0.75), na.rm=na.rm)
     names(qs) <- c("1/4", "1/2", "3/4")
-    deviation / c(
-        median(abs(deviation[deviation < qs["1/2"]])) / constant,
-        median(abs(deviation[deviation >= qs["1/2"]])) / constant
+    idx <- deviation < qs["1/2"]
+    deviation * constant / ifelse(idx,
+        median(abs(deviation)),
+        median(abs(deviation))
     )
 }
 
@@ -323,7 +324,7 @@ utility.modes <- function(values, sign=1, logic=TRUE){
 #' Function to calculate the modified z-score for n modes.
 #'
 #' @usage
-#' `transform.nmodifiedz(y, na.rm=FALSE, constant=0.6744671045)`
+#' `transform.nmodifiedz(y, na.rm=FALSE, constant=qnorm(0.75))`
 #'
 #' @param y numeric vector to transform.
 #' @param na.rm to remove NAs in calculation but not in result.
@@ -357,7 +358,7 @@ utility.modes <- function(values, sign=1, logic=TRUE){
 #' hist(z, breaks=100, main="Histogram of Modified-z Scores", xlab="Modified-z from Each Side of Each Mode")
 #'
 #' @export
-transform.nmodifiedz <- function(y, ..., constant=0.6744671045, na.rm=FALSE){
+transform.nmodifiedz <- function(y, ..., constant=qnorm(0.75), na.rm=FALSE){
     '
     Calculate the modified z-score for each mode, if there are fewer maxima
     than minima.
@@ -368,15 +369,18 @@ transform.nmodifiedz <- function(y, ..., constant=0.6744671045, na.rm=FALSE){
     maxima_indexes <- utility.modes(density_values$y, sign=1, logic=FALSE)
     minima_indexes <- utility.modes(density_values$y, sign=-1, logic=FALSE)
     nmode_z <- rep(NA, length=length(density_values$y))
-    sections <- findInterval(data, density_values$x[minima_indexes])
+    sections <- findInterval(y, density_values$x[minima_indexes])
     for(i in 1:length(maxima_indexes)){
         center <- density_values$x[maxima_indexes[i]]
-        deviation <- data[sections==i] - center
-        nmode_z[sections==i] <- deviation * constant / c(
-            median(abs(deviation[deviation < 0])),
-            median(abs(deviation[deviation >=0]))
+        deviation <- y[sections==i] - center
+        idx <- deviation < 0
+        nmode_z[sections==i] <- constant * deviation / ifelse(
+            idx,
+            median(abs(-deviation)),
+            median(abs(deviation))
         )
     }
     nmode_z
 }
+
 
