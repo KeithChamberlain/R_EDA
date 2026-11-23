@@ -151,12 +151,43 @@ transform.logit <- function(y, base=exp(1)){
 }
 
 
-transform.sigmoid <- function(y, base=exp(1)){
+#' @title A sigmoid transform where base can vary
+#'
+#' @description
+#' Calculates the sigmoid transform of data ideally transformed to the domain
+#' of values that generate the full range of transformed values.
+#'
+#' @usage
+#' `transform.sigmoid(y=data, base=exp)`
+#'
+#' @param y is the data to transform
+#' @param base is the base to use for the transformation
+#'
+#' @returns a vector of transformed values
+#'
+#' @details
+#' If data is sampled from a normal distribution, such as when using
+#' `rnorm(10000, mean=30, sd=10)`, transformed via `base` to the usable range
+#' of the transform, then the custom logit transform with the associated base
+#' gives the inverse.
+#'
+#' @seealso [transform.logit()] for the logit transform. [non_saturated()] to
+#' find the non-saturated ranges for a transform. [transform.minmax()] to
+#' transform to the base range between [0, 1]. [transform.minmax.restore()] for
+#' the inverse transform, or to transform from the base range to another range.
+#'
+#' @examples
+#' ## Create data
+#' data <- rnorm(n=10000, mean=30, sd=10)
+#' all.equal(transform.minmax(data), transform.logit(transform.sigmoid(transform.minmax(data))))
+#' @export
+transform.sigmoid <- function(y, base=exp){
     '
     transform from infinite range to probabilities
     '
-    1/(1+base^(-y))
+    1/(1+base(-y))
 }
+
 
 
 #' @title Modified Z-Score
